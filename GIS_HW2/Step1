@@ -1,0 +1,25 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var L7_32_NDVI = ee.ImageCollection("LANDSAT/LE7_L1T_32DAY_NDVI"),
+    L8_32_NDVI = ee.ImageCollection("LANDSAT/LC8_L1T_32DAY_NDVI");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+
+Map.setOptions('SATELLITE');
+
+var ndviL732Day=  ee.ImageCollection('LANDSAT/LE7_L1T_32DAY_NDVI');
+var ndviL832Day = ee.ImageCollection('LANDSAT/LC8_L1T_32DAY_NDVI');
+
+var filtered2017 = ndviL832Day.filterDate('2016-12-01', '2017-02-28').max();
+var filtered2000 = ndviL732Day.filterDate('2000-01-01', '2000-12-31').max();
+
+Map.addLayer(filtered2017, {'palette':'4B0082, 00FF00', 'min': 0.2, 'max': 0.9}, 'max ndvi 2017'); 
+Map.addLayer(filtered2000, {'palette':'4B0082, 00FF00', 'min': 0.2, 'max': 0.9}, 'max ndvi 2000'); 
+
+//Map.addLayer(filtered2017, {'palette':'000000, 00FF00', 'min': 0.5, 'max': 0.7}, 'max ndvi 2017'); 
+//Map.addLayer(filtered2000, {'palette':'000000, 00FF00', 'min': 0.5, 'max': 0.7}, 'max ndvi 2000'); 
+
+// from 5
+
+//var difference = filtered2000.subtract(filtered2014).gt(0.3);
+
+//Map.addLayer(difference.mask(difference),
+//{'palette':'FF0000'}, 'masked difference');

@@ -1,0 +1,41 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #d63000 */ee.Geometry.MultiPoint(),
+    roi = /* color: #98ff00 */ee.Geometry.Polygon(
+        [[[100.140380859375, 14.1738602683066],
+          [100.12252807617188, 13.540535792407427],
+          [101.07147216796875, 13.520508153934644],
+          [101.07147216796875, 14.18318046581142]]]),
+    imageCollection = ee.ImageCollection("LANDSAT/LC8_L1T_8DAY_TOA");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//Question 5
+
+var L8_Collection = ee.ImageCollection('LANDSAT/LC8_L1T');
+
+var L8Filtered = L8_Collection.filterDate('2016-12-01', '2017-02-28');
+var image = ee.Algorithms.Landsat.simpleComposite({
+  collection: L8Filtered,
+  asFloat: true
+});
+var savi = image.expression(
+  '((NIR - RED)*(1+0.5))/(NIR + RED + 0.5)',
+  {
+    'NIR': image.select('B5'),
+    'RED': image.select ('B4')
+  });
+  
+Map.addLayer(savi, {'palette': '4B0082, 7CFC00', 'min': 0.1, 'max': 0.5}, 'SAVI');
+
+
+//Importing Landsat Image
+var image = ee.ImageCollection('LANDSAT/LC8_L1T_8DAY_TOA');
+var image_filter = image.filterDate('2016-01-01', '2017-01-01').median().float();
+//Map.addLayer(image_filter, {'bands': ['B4', 'B3','B2']});
+
+Export.image.toDrive(
+  {image: image_filter,
+    description: 'Index_L8',
+    fileNamePrefix: 'Index_L8',
+    region: roi,
+    scale: 30, 
+    maxPixels: 1e9
+  });

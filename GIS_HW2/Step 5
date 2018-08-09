@@ -1,0 +1,36 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var roi = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[100.294189453125, 13.906387442089164],
+          [100.2996826171875, 13.546189122838165],
+          [100.90530395507812, 13.531502701537729],
+          [100.91079711914062, 13.902388289227789]]]),
+    imageCollection = ee.ImageCollection("LANDSAT/LC8_L1T_8DAY_TOA");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//Question 5
+
+var L8_Collection = ee.ImageCollection('LANDSAT/LC8_L1T');
+
+var L8Filtered = L8_Collection.filterDate('2016-12-01', '2017-02-28');
+var image = ee.Algorithms.Landsat.simpleComposite({
+  collection: L8Filtered,
+  asFloat: true
+});
+var savi = image.expression(
+  '((NIR - RED)*(1+0.5))/(NIR + RED + 0.5)',
+  {
+    'NIR': image.select('B5'),
+    'RED': image.select ('B4')
+  });
+  
+Map.addLayer(savi, {'palette': '4B0082, 7CFC00', 'min': 0.1, 'max': 0.5}, 'SAVI');
+
+var image = ee.Image('LANDSAT/LC8_L1T_8DAY_TOA/20150922');
+
+Export.image.toDrive(
+  {image: savi,
+    description: 'Index',
+    fileNamePrefix: 'Index',
+    region: roi,
+    scale: 30, 
+    maxPixels: 1e9
+  });

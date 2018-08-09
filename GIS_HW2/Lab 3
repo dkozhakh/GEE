@@ -1,0 +1,24 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var L8 = ee.ImageCollection("LANDSAT/LC08/C01/T1"),
+    hansen = ee.Image("UMD/hansen/global_forest_change_2015_v1_3"),
+    imageVisParam = {"opacity":1,"bands":["treecover2000"],"palette":["000000","00ff00"]};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var countries = ee.FeatureCollection('ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw');
+var malaysia = countries.filterMetadata('Country', 'equals', 'Malaysia');
+Map.centerObject(malaysia, 5);
+Map.addLayer(malaysia, {}, 'Malaysia');
+
+var malaysia_2016 = L8.filterDate('2016-01-01', '2016-12-31');
+var l8_2016 = ee.Algorithms.Landsat.simpleComposite({
+  collection: L8,
+  asFloat: true
+});
+
+var l8_2016_malaysia = l8_2016.clip (malaysia);
+Map.addLayer(l8_2016_malaysia,{'bands':['B4', 'B3', 'B2']}, 'L8 2016');
+
+var treecover_00 = hansen.select('treecover2000').clip(malaysia);
+Map.addLayer(treecover_00, {'palette':['000000', '00FF00']}, 'forest cover 2000');
+
+var prctcoverage25_2000 = treecover_00.gt(25); 
+Map.addLayer(prctcoverage25_2000.mask(prctcoverage25_2000), {'palette':['000000', '00FF00']}, '>25% forest cover, 2000');

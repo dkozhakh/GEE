@@ -1,0 +1,104 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var L7_32_NDVI = ee.ImageCollection("LANDSAT/LE7_L1T_32DAY_NDVI"),
+    L8_32_NDVI = ee.ImageCollection("LANDSAT/LC8_L1T_32DAY_NDVI"),
+    roi = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[100.21453857421875, 14.061988097202281],
+          [100.21453857421875, 13.60861713965305],
+          [100.98770141601562, 13.597939005012236],
+          [100.96710205078125, 14.057991647736474]]]),
+    geometry = /* color: #d63000 */ee.Geometry.Point([100.72402954101562, 13.807408980510365]),
+    L8_Collection = ee.ImageCollection("LANDSAT/LC8_L1T");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+
+Map.setOptions('SATELLITE');
+
+var ndviL732Day=  ee.ImageCollection('LANDSAT/LE7_L1T_32DAY_NDVI');
+var ndviL832Day = ee.ImageCollection('LANDSAT/LC8_L1T_32DAY_NDVI');
+
+var filtered2017 = ndviL832Day.filterDate('2016-12-01', '2017-02-28').max();
+var filtered2000 = ndviL732Day.filterDate('2000-12-01', '2001-02-28').max();
+
+Map.addLayer(filtered2017, {'palette':'4B0082, 00FF00', 'min': 0.2, 'max': 0.9}, 'max ndvi 2017'); 
+Map.addLayer(filtered2000, {'palette':'4B0082, 00FF00', 'min': 0.2, 'max': 0.9}, 'max ndvi 2000'); 
+
+//Decrease in vegetation
+
+var difference = filtered2000.subtract(filtered2017);
+var diminished = difference.gt(0.1);
+
+Map.addLayer(diminished.mask(diminished), {'palette': 'FF0000'}, 'diminished');
+
+
+//Increase in vegetation
+
+var increase = difference.lt(-0.5);
+Map.addLayer(increase.mask(increase), {'palette': '00FF00'}, 'increase');
+
+//Export images
+Export.image.toDrive(
+  {image: increase,
+    description: 'increase_in_NDVI',
+    fileNamePrefix: 'increase_in_NDVI',
+    region: roi,
+    scale: 30, 
+    maxPixels: 1e9
+  });
+  
+ Export.image.toDrive(
+  {image: diminished,
+    description: 'decrease_in_NDVI',
+    fileNamePrefix: 'decrease_in_NDVI',
+    region: roi,
+    scale: 30, 
+    maxPixels: 1e9
+  });
+  
+
+print('Polygon area: ', roi.area());
+var collection = ee.ImageCollection('LANDSAT/LE7_L1T_32DAY_NDVI');
+var NDVI2000_2017 = collection.filterDate('2000-01-01','2017-12-31');
+
+//Creating time chart
+
+var onepoint = ee.Geometry.Point(100.72,13.80);
+var bufferedPoint = onepoint.buffer(1000);
+Map.addLayer(bufferedPoint);
+
+var chartOptions = 
+{
+  title: 'Annual trends in NDVI',
+  hAxis: {title: 'Years'},
+  vAxis: {title: 'NDVI index'},
+  
+};
+var years = ['2000-01-01', '2005-01-01', '2008-01-01', '2011-01-01', '2013-01-01', '2017-01-01'];
+var chart = ui.Chart.image.series(NDVI2000_2017, bufferedPoint, ee.Reducer.mean(), 30).setOptions(chartOptions);
+
+print(chart);
+
+//Question 5
+var L8_Collection = ee.ImageCollection('LANDSAT/LC8_L1T')
+
+var L8Filtered = L8_Collection.filterDate('2016-12-01', '2017-02-28');
+var image = ee.Algorithms.Landsat.simpleComposite({
+  collection: L8Filtered,
+  asFloat: true
+});
+var savi = image.expression(
+  '((NIR - RED)*(1+0.5))/(NIR + RED + 0.5)',
+  {
+    'NIR': image.select('B5'),
+    'RED': image.select ('B4')
+  });
+  
+Map.addLayer(savi, {'palette': '4B0082, 7CFC00', 'min': 0.1, 'max': 0.5}, 'SAVI');
+
+Export.image.toDrive(
+  {image: savi,
+    description: 'SAVI Index',
+    fileNamePrefix: 'SAVI Index',
+    region: roi,
+    scale: 30, 
+    maxPixels: 1e9
+  });
+  
